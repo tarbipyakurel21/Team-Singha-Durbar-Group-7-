@@ -89,9 +89,12 @@ export async function PUT(
     }
     
     // If updating category, verify it exists
-    if (body.categoryId) {
+    if (body.categoryId !== undefined) {
+      const categoryIdNum = typeof body.categoryId === 'string' 
+        ? parseInt(body.categoryId) 
+        : body.categoryId;
       const categories = await getCategories();
-      const categoryExists = categories.some((c: any) => c.id === body.categoryId);
+      const categoryExists = categories.some((c: any) => c.id === categoryIdNum);
       
       if (!categoryExists) {
         return NextResponse.json(
