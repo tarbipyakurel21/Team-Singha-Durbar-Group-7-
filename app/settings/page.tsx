@@ -22,7 +22,8 @@ import {
   Trash2,
   Download,
   Upload,
-  RotateCcw
+  RotateCcw,
+  ShoppingCart
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -151,6 +152,74 @@ export default function SettingsPage() {
 
   const handleDataImport = () => {
     alert("Data import functionality would be implemented here - imports from a backup JSON file");
+  };
+
+  const handlePOSUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      alert('Please upload a CSV file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      try {
+        // Parse CSV
+        const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+        if (lines.length < 2) {
+          alert('CSV file must have at least a header row and one data row');
+          return;
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        const salesData = [];
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue; // Skip empty lines
+          
+          const values = line.split(',').map(v => v.trim());
+          // Only process if we have the right number of columns and at least one non-empty value
+          if (values.length === headers.length && values.some(v => v)) {
+            const record: any = {};
+            headers.forEach((header, index) => {
+              record[header] = values[index] || '';
+            });
+            // Only add if we have essential data (Item Name and Quantity)
+            if (record['Item Name'] && record['Quantity']) {
+              salesData.push(record);
+            }
+          }
+        }
+
+        // Get the date from the first record (all records should be same date for daily data)
+        const uploadDate = salesData.length > 0 ? (salesData[0].Date || salesData[0].date || '') : '';
+        
+        // Store in localStorage - replace data for this date instead of appending
+        const existingData = JSON.parse(localStorage.getItem('posData') || '[]');
+        
+        // Remove existing data for this date (if any)
+        const filteredData = existingData.filter((record: any) => {
+          const recordDate = record.Date || record.date || '';
+          return recordDate !== uploadDate;
+        });
+        
+        // Add new data for this date
+        const newData = [...filteredData, ...salesData];
+        localStorage.setItem('posData', JSON.stringify(newData));
+        
+        const dateDisplay = uploadDate || 'the uploaded date';
+        alert(`Successfully imported ${salesData.length} sales records for ${dateDisplay}! Existing data for this date has been replaced.`);
+        window.location.reload();
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        alert('Error parsing CSV file. Please check the format.');
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleDeleteAllProducts = () => {
@@ -488,6 +557,74 @@ export default function SettingsPage() {
                 checked={lowStockAlerts}
                 onCheckedChange={handleLowStockAlertsToggle}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* POS Data Upload Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-primary" />
+              <CardTitle>POS Data Upload</CardTitle>
+            </div>
+            <CardDescription>
+              Upload daily POS (Point of Sale) data from CSV files to track sales
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Upload Daily POS Data</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={handlePOSUpload}
+                    className="hidden"
+                    id="pos-upload"
+                  />
+                  <Label htmlFor="pos-upload" className="cursor-pointer">
+                    <Button variant="outline" type="button" asChild>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Choose CSV File
+                      </span>
+                    </Button>
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Upload a CSV file with columns: Date, Item Name, SKU, Quantity, Unit Price, Total, Category
+                </p>
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <p className="text-xs font-medium mb-2">Sample CSV files available for download:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href="/pos-data-day1.csv"
+                      download
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      📄 pos-data-day1.csv
+                    </a>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <a
+                      href="/pos-data-day2.csv"
+                      download
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      📄 pos-data-day2.csv
+                    </a>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <a
+                      href="/pos-data-day3.csv"
+                      download
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      📄 pos-data-day3.csv
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

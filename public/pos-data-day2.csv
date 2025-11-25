@@ -1,0 +1,13 @@
+Date,Item Name,SKU,Quantity,Unit Price,Total,Category
+2025-11-25,Business Laptop,LAPTOP-001,5,899.99,4499.95,Electronics
+2025-11-25,Wireless Mouse,MOUSE-001,22,29.99,659.78,Electronics
+2025-11-25,Standing Desk,DESK-001,1,349.99,349.99,Furniture
+2025-11-25,Office Chair,CHAIR-001,3,199.99,599.97,Furniture
+2025-11-25,Keyboard,KEYBOARD-001,6,79.99,479.94,Electronics
+2025-11-25,Monitor Stand,MONITOR-001,3,49.99,149.97,Electronics
+2025-11-25,Desk Lamp,LAMP-001,4,39.99,159.96,Furniture
+2025-11-25,USB Cable,CABLE-001,25,9.99,249.75,Electronics
+2025-11-25,Notebook,NBOOK-001,15,4.99,74.85,Office Supplies
+2025-11-25,Pen Set,PEN-001,8,12.99,103.92,Office Supplies
+2025-11-25,Stapler,STAPLER-001,7,14.99,104.93,Office Supplies
+

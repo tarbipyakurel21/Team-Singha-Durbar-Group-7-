@@ -47,24 +47,9 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [isTopSellingExpanded, setIsTopSellingExpanded] = useState(false);
   const [isLowestSellingExpanded, setIsLowestSellingExpanded] = useState(false);
-
-  // Mock POS data for daily sales
-  const mockDailySales: SalesData[] = [
-    { productName: "Business Laptop", quantity: 3, revenue: 2699.97 },
-    { productName: "Wireless Mouse", quantity: 8, revenue: 239.92 },
-    { productName: "Standing Desk", quantity: 1, revenue: 349.99 },
-  ];
-
-  // Mock weekly sales data for charts
-  const weeklySalesData = [
-    { day: "Mon", sales: 1200, items: 15 },
-    { day: "Tue", sales: 1900, items: 22 },
-    { day: "Wed", sales: 1500, items: 18 },
-    { day: "Thu", sales: 2100, items: 25 },
-    { day: "Fri", sales: 1800, items: 20 },
-    { day: "Sat", sales: 2400, items: 28 },
-    { day: "Sun", sales: 1600, items: 19 },
-  ];
+  const [dailySalesData, setDailySalesData] = useState<Array<{ day: string; sales: number; items: number }>>([]);
+  const [topSellingItems, setTopSellingItems] = useState<Array<{ name: string; sales: number; revenue: number }>>([]);
+  const [lowestSellingItems, setLowestSellingItems] = useState<Array<{ name: string; sales: number; revenue: number }>>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -84,23 +69,93 @@ export default function ReportsPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Load and process POS data from localStorage
+    const posData = JSON.parse(localStorage.getItem('posData') || '[]');
+    
+    if (posData.length > 0) {
+      // Group sales by date
+      const salesByDate: Record<string, { sales: number; items: number }> = {};
+      const itemStats: Record<string, { quantity: number; revenue: number }> = {};
+
+      posData.forEach((sale: any) => {
+        // Skip invalid entries
+        if (!sale || (!sale['Item Name'] && !sale.itemName && !sale.ItemName)) {
+          return;
+        }
+
+        const date = sale.Date || sale.date || '';
+        const itemName = sale['Item Name'] || sale.itemName || sale.ItemName || 'Unknown';
+        const quantity = parseInt(sale.Quantity || sale.quantity || '0');
+        const total = parseFloat(sale.Total || sale.total || '0');
+
+        // Skip if quantity is 0 or invalid
+        if (isNaN(quantity) || quantity <= 0) {
+          return;
+        }
+
+        // Group by date
+        if (date) {
+          if (!salesByDate[date]) {
+            salesByDate[date] = { sales: 0, items: 0 };
+          }
+          salesByDate[date].sales += total;
+          salesByDate[date].items += quantity;
+        }
+
+        // Track item stats - aggregate by item name
+        if (!itemStats[itemName]) {
+          itemStats[itemName] = { quantity: 0, revenue: 0 };
+        }
+        itemStats[itemName].quantity += quantity;
+        itemStats[itemName].revenue += total;
+      });
+
+      // Convert to daily sales array (last 7 days or all available)
+      const dates = Object.keys(salesByDate).sort();
+      const last7Days = dates.slice(-7);
+      const dailyData = last7Days.map(date => {
+        const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+        return {
+          day: dayName,
+          sales: salesByDate[date].sales,
+          items: salesByDate[date].items,
+        };
+      });
+      setDailySalesData(dailyData);
+
+      // Calculate top and lowest selling items
+      const itemsArray = Object.entries(itemStats)
+        .filter(([name, stats]) => name !== 'Unknown' && stats.quantity > 0)
+        .map(([name, stats]) => ({
+          name,
+          sales: stats.quantity,
+          revenue: stats.revenue,
+        }));
+
+      // Sort by quantity sold (units sold) - descending for top, ascending for lowest
+      const sortedByQuantity = itemsArray.sort((a, b) => b.sales - a.sales);
+      
+      // Top selling = highest quantity
+      setTopSellingItems(sortedByQuantity.slice(0, 5));
+      
+      // Lowest selling = lowest quantity (but only if we have multiple items)
+      const lowestItems = sortedByQuantity.length > 0 
+        ? sortedByQuantity.slice(-5).reverse()
+        : [];
+      setLowestSellingItems(lowestItems);
+    } else {
+      // Default empty data
+      setDailySalesData([]);
+      setTopSellingItems([]);
+      setLowestSellingItems([]);
+    }
+  }, []);
+
   const lowStockItems = products.filter(p => p.stock <= p.minStock);
   
-  // Mock top/lowest selling items (based on POS data)
-  const topSellingItems = [
-    { name: "Wireless Mouse", sales: 45, revenue: 1349.55 },
-    { name: "Business Laptop", sales: 12, revenue: 10799.88 },
-    { name: "Standing Desk", sales: 8, revenue: 2799.92 },
-  ];
-
-  const lowestSellingItems = [
-    { name: "Office Chair", sales: 2, revenue: 599.98 },
-    { name: "Keyboard", sales: 3, revenue: 149.97 },
-    { name: "Monitor", sales: 1, revenue: 299.99 },
-  ];
-
-  // Weekly restock summary
-  const weeklyRestockNeeds = lowStockItems.map(product => ({
+  // Daily restock summary
+  const dailyRestockNeeds = lowStockItems.map(product => ({
     name: product.name,
     sku: product.sku,
     currentStock: product.stock,
@@ -210,33 +265,51 @@ export default function ReportsPage() {
                 )}
               </div>
               <CardDescription className="text-xs mt-1">
-                Based on POS transaction history
+                Based on uploaded POS data
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="space-y-2">
-                {(isTopSellingExpanded ? topSellingItems : topSellingItems.slice(0, 1)).map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                  >
+              {topSellingItems.length > 0 ? (
+                <div className="space-y-2">
+                  {(isTopSellingExpanded ? topSellingItems : topSellingItems.slice(0, 1)).map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.sales} units sold
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">
+                          {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                          }).format(item.revenue)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-2 rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{item.name}</p>
+                      <p className="text-sm font-medium text-muted-foreground">N/A</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.sales} units sold
+                        No data available
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold">
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(item.revenue)}
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        N/A
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -269,33 +342,51 @@ export default function ReportsPage() {
                 )}
               </div>
               <CardDescription className="text-xs mt-1">
-                Based on POS transaction history
+                Based on uploaded POS data
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="space-y-2">
-                {(isLowestSellingExpanded ? lowestSellingItems : lowestSellingItems.slice(0, 1)).map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                  >
+              {lowestSellingItems.length > 0 ? (
+                <div className="space-y-2">
+                  {(isLowestSellingExpanded ? lowestSellingItems : lowestSellingItems.slice(0, 1)).map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.sales} units sold
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">
+                          {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                          }).format(item.revenue)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-2 rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{item.name}</p>
+                      <p className="text-sm font-medium text-muted-foreground">N/A</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.sales} units sold
+                        No data available
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold">
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(item.revenue)}
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        N/A
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -318,19 +409,19 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Weekly Restock Summary */}
+        {/* Daily Restock Summary */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Package2 className="h-5 w-5 text-primary" />
-              <CardTitle>Weekly Restock Summary</CardTitle>
+              <CardTitle>Daily Restock Summary</CardTitle>
             </div>
             <CardDescription>
               Combines POS and stock data to highlight refill needs
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {weeklyRestockNeeds.length > 0 ? (
+            {dailyRestockNeeds.length > 0 ? (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -343,7 +434,7 @@ export default function ReportsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {weeklyRestockNeeds.map((item, index) => (
+                    {dailyRestockNeeds.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell className="text-muted-foreground">{item.sku}</TableCell>
@@ -367,17 +458,18 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Weekly Sales Chart */}
+        {/* Daily Sales Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Weekly Sales Overview</CardTitle>
+            <CardTitle>Daily Sales Overview</CardTitle>
             <CardDescription>
-              Sales data from POS transactions
+              Sales data from uploaded POS transactions
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklySalesData}>
+            {dailySalesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dailySalesData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="day" 
@@ -419,6 +511,16 @@ export default function ReportsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-center">
+                <p className="text-lg font-medium text-muted-foreground mb-2">
+                  N/A
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Upload POS data in Settings to view daily sales charts
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

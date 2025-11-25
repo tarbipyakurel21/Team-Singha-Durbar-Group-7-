@@ -98,12 +98,95 @@ export default function DashboardPage() {
     { name: "Standing Desk", sku: "DESK-001", quantity: 3, date: "1 day ago" },
   ];
 
-  // Mock daily sales summary
-  const dailySales = {
-    totalRevenue: 3289.88,
-    totalItems: 12,
-    topItem: "Business Laptop",
-  };
+  // Get POS data from localStorage
+  const [dailySales, setDailySales] = useState({
+    totalRevenue: 0,
+    totalItems: 0,
+    topItem: "N/A",
+    topItemQuantity: 0,
+    salesByCategory: {} as Record<string, number>,
+    hasData: false,
+  });
+
+  useEffect(() => {
+    // Load POS data from localStorage
+    const posData = JSON.parse(localStorage.getItem('posData') || '[]');
+    
+    if (posData.length > 0) {
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Filter today's sales
+      const todaySales = posData.filter((sale: any) => {
+        const saleDate = sale.Date || sale.date;
+        return saleDate === today || saleDate?.startsWith(today);
+      });
+
+      if (todaySales.length > 0) {
+        // Calculate totals
+        const totalRevenue = todaySales.reduce((sum: number, sale: any) => {
+          const total = parseFloat(sale.Total || sale.total || '0');
+          return sum + total;
+        }, 0);
+
+        const totalItems = todaySales.reduce((sum: number, sale: any) => {
+          const qty = parseInt(sale.Quantity || sale.quantity || '0');
+          return sum + qty;
+        }, 0);
+
+        // Find top item
+        const itemCounts: Record<string, number> = {};
+        todaySales.forEach((sale: any) => {
+          const itemName = sale['Item Name'] || sale.itemName || sale.ItemName;
+          const qty = parseInt(sale.Quantity || sale.quantity || '0');
+          if (itemName) {
+            itemCounts[itemName] = (itemCounts[itemName] || 0) + qty;
+          }
+        });
+
+        const topItemEntry = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])[0];
+        const topItem = topItemEntry ? topItemEntry[0] : 'N/A';
+        const topItemQuantity = topItemEntry ? topItemEntry[1] : 0;
+
+        // Calculate sales by category
+        const salesByCategory: Record<string, number> = {};
+        todaySales.forEach((sale: any) => {
+          const category = sale.Category || sale.category || 'Other';
+          const total = parseFloat(sale.Total || sale.total || '0');
+          salesByCategory[category] = (salesByCategory[category] || 0) + total;
+        });
+
+        setDailySales({
+          totalRevenue,
+          totalItems,
+          topItem,
+          topItemQuantity,
+          salesByCategory,
+          hasData: true,
+        });
+      } else {
+        // No today's data - show N/A
+        setDailySales({
+          totalRevenue: 0,
+          totalItems: 0,
+          topItem: 'N/A',
+          topItemQuantity: 0,
+          salesByCategory: {},
+          hasData: false,
+        });
+      }
+    } else {
+      // No POS data at all - show N/A
+      setDailySales({
+        totalRevenue: 0,
+        totalItems: 0,
+        topItem: 'N/A',
+        topItemQuantity: 0,
+        salesByCategory: {},
+        hasData: false,
+      });
+    }
+  }, []);
 
   // Basic refill recommendations (based on low stock)
   const refillRecommendations = products
@@ -303,39 +386,69 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Total Revenue</span>
                     <span className="text-base font-bold">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(dailySales.totalRevenue)}
+                      {dailySales.hasData ? (
+                        new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(dailySales.totalRevenue)
+                      ) : (
+                        "N/A"
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Items Sold</span>
-                    <span className="text-base font-semibold">{dailySales.totalItems}</span>
+                    <span className="text-base font-semibold">
+                      {dailySales.hasData ? dailySales.totalItems : "N/A"}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Top Item</span>
-                    <span className="text-xs font-medium">{dailySales.topItem}</span>
+                    <span className="text-xs font-medium">
+                      {dailySales.hasData ? (
+                        `${dailySales.topItem} ${dailySales.topItemQuantity > 0 ? `(${dailySales.topItemQuantity} sold)` : ''}`
+                      ) : (
+                        "N/A"
+                      )}
+                    </span>
                   </div>
+                  {Object.keys(dailySales.salesByCategory).length > 0 && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-xs text-muted-foreground mb-1">Sales by Category:</p>
+                      {Object.entries(dailySales.salesByCategory).map(([category, total]) => (
+                        <div key={category} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{category}</span>
+                          <span className="font-medium">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                            }).format(total)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-start gap-2">
-                    <Settings className="h-3 w-3 text-primary mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-primary mb-0.5">
-                        Upload Daily POS Data
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-1.5">
-                        Go to Settings to upload daily POS data
-                      </p>
-                      <Link href="/settings">
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs">
-                          Go to Settings
-                        </Button>
-                      </Link>
+                {!dailySales.hasData && (
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <div className="flex items-start gap-2">
+                      <Settings className="h-3 w-3 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-primary mb-0.5">
+                          Upload Daily POS Data
+                        </p>
+                        <p className="text-xs text-muted-foreground mb-1.5">
+                          Go to Settings to upload daily POS data
+                        </p>
+                        <Link href="/settings">
+                          <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                            Go to Settings
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
