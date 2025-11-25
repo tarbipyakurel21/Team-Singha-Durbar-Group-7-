@@ -10,7 +10,7 @@ interface UpdateProductDto {
   cost?: number;
   stock?: number;
   minStock?: number;
-  categoryId?: number;
+  categoryId?: string;
 }
 
 // GET /api/products/[id] - Get single product
@@ -19,10 +19,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
         { status: 400 }
@@ -54,10 +53,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
         { status: 400 }
@@ -89,9 +87,10 @@ export async function PUT(
     }
     
     // If updating category, verify it exists
-    if (body.categoryId) {
+    if (body.categoryId !== undefined) {
+      const categoryId = body.categoryId;
       const categories = await getCategories();
-      const categoryExists = categories.some((c: any) => c.id === body.categoryId);
+      const categoryExists = categories.some((c: any) => c.id === categoryId);
       
       if (!categoryExists) {
         return NextResponse.json(
@@ -122,10 +121,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
         { status: 400 }
