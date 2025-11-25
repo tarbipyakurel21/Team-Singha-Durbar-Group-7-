@@ -217,7 +217,12 @@ export async function addUser(user: any) {
 
 // Initialize with sample data
 export async function initializeData() {
-  await connectDB();
+  try {
+    await connectDB();
+  } catch (error: any) {
+    console.error('❌ Failed to connect to MongoDB:', error?.message || error);
+    throw new Error(`Database connection failed: ${error?.message || 'Unknown error'}`);
+  }
   
   try {
     const categories = await getCategories();
@@ -293,8 +298,8 @@ export async function initializeData() {
     }
 
     console.log('✅ Data initialized successfully');
-  } catch (error) {
-    console.error('❌ Error initializing data:', error);
+  } catch (error: any) {
+    console.error('❌ Error initializing data:', error?.message || error);
     throw error;
   }
 }
