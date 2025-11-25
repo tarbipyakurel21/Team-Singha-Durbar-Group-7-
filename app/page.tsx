@@ -9,12 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProductSummaryCards } from "@/components/product-summary-cards";
-import { Package2, Plus, Search, Trash2, Edit2, Loader2 } from "lucide-react";
+import { CategoryDialog } from "@/components/category-dialog";
+import { Package2, Plus, Search, Trash2, Edit2, Loader2, FolderOpen } from "lucide-react";
 
 interface Category {
   id: number;
   name: string;
   description?: string;
+  _count?: { products: number };
 }
 
 interface Product {
@@ -38,6 +40,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -49,6 +53,18 @@ export default function Home() {
     categoryId: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Category management state
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: "",
+    description: "",
+  });
+  const [categorySubmitting, setCategorySubmitting] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -127,10 +143,178 @@ export default function Home() {
     }
   };
 
+  const handleEdit = async () => {
+    if (!selectedProduct) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/products/${selectedProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update product');
+      }
+
+      const updatedProduct = await response.json();
+      setProducts(products.map((product) =>
+        product.id === selectedProduct.id ? updatedProduct : product
+      ));
+      setIsEditDialogOpen(false);
+      setSelectedProduct(null);
+      resetForm();
+    } catch (error: any) {
+      console.error('Error updating product:', error);
+      alert(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (product: Product) => {
+    setSelectedProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description || "",
+      sku: product.sku,
+      price: product.price.toString(),
+      cost: product.cost.toString(),
+      stock: product.stock.toString(),
+      minStock: product.minStock.toString(),
+      categoryId: product.categoryId.toString(),
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete product');
+      }
+
+      setProducts(products.filter((product) => product.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      alert(error.message);
+    }
+  };
+
+  // Category management functions
+  const resetCategoryForm = () => {
+    setCategoryFormData({ name: "", description: "" });
+  };
+
+  const handleAddCategory = async () => {
+    if (!categoryFormData.name) return;
+
+    setCategorySubmitting(true);
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryFormData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create category');
+      }
+
+      const newCategory = await response.json();
+      setCategories([newCategory, ...categories]);
+      setIsAddCategoryDialogOpen(false);
+      resetCategoryForm();
+    } catch (error: any) {
+      console.error('Error adding category:', error);
+      alert(error.message);
+    } finally {
+      setCategorySubmitting(false);
+    }
+  };
+
+  const handleEditCategory = async () => {
+    if (!selectedCategory) return;
+
+    setCategorySubmitting(true);
+    try {
+      const response = await fetch(`/api/categories/${selectedCategory.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryFormData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update category');
+      }
+
+      const updatedCategory = await response.json();
+      setCategories(categories.map((cat) =>
+        cat.id === selectedCategory.id ? updatedCategory : cat
+      ));
+      setIsEditCategoryDialogOpen(false);
+      setSelectedCategory(null);
+      resetCategoryForm();
+    } catch (error: any) {
+      console.error('Error updating category:', error);
+      alert(error.message);
+    } finally {
+      setCategorySubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this category?")) return;
+
+    try {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete category');
+      }
+
+      setCategories(categories.filter((cat) => cat.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting category:', error);
+      alert(error.message);
+    }
+  };
+
+  const openEditCategoryDialog = (category: Category) => {
+    setSelectedCategory(category);
+    setCategoryFormData({
+      name: category.name,
+      description: category.description || "",
+    });
+    setIsEditCategoryDialogOpen(true);
+  };
+
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) ||
+    category.description?.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -278,10 +462,257 @@ export default function Home() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Product</DialogTitle>
+                <DialogDescription>
+                  Update the selected product information.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-name">Product Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Input
+                    id="edit-description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Enter product description"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-sku">SKU *</Label>
+                  <Input
+                    id="edit-sku"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="Enter SKU"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-cost">Cost *</Label>
+                    <Input
+                      id="edit-cost"
+                      type="number"
+                      step="0.01"
+                      value={formData.cost}
+                      onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-price">Price *</Label>
+                    <Input
+                      id="edit-price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-stock">Stock</Label>
+                    <Input
+                      id="edit-stock"
+                      type="number"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-minStock">Min Stock</Label>
+                    <Input
+                      id="edit-minStock"
+                      type="number"
+                      value={formData.minStock}
+                      onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-category">Category *</Label>
+                  <Select
+                    value={formData.categoryId}
+                    onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedProduct(null);
+                  resetForm();
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEdit} disabled={submitting}>
+                  {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Category Dialogs */}
+          <CategoryDialog
+            open={isAddCategoryDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddCategoryDialogOpen(open);
+              if (!open) resetCategoryForm();
+            }}
+            mode="add"
+            formData={categoryFormData}
+            onFormChange={setCategoryFormData}
+            onSubmit={handleAddCategory}
+            submitting={categorySubmitting}
+          />
+
+          <CategoryDialog
+            open={isEditCategoryDialogOpen}
+            onOpenChange={(open) => {
+              setIsEditCategoryDialogOpen(open);
+              if (!open) {
+                setSelectedCategory(null);
+                resetCategoryForm();
+              }
+            }}
+            mode="edit"
+            formData={categoryFormData}
+            onFormChange={setCategoryFormData}
+            onSubmit={handleEditCategory}
+            submitting={categorySubmitting}
+          />
         </div>
 
         {/* Summary Cards */}
         <ProductSummaryCards products={products} categoriesCount={categories.length} />
+
+        {/* Categories Management Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FolderOpen className="h-5 w-5" />
+                <CardTitle>Categories</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>({categories.length})</span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="checkbox"
+                      id="show-categories"
+                      checked={showCategories}
+                      onChange={(e) => setShowCategories(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-2 cursor-pointer"
+                    />
+                    <Label htmlFor="show-categories" className="cursor-pointer font-normal">
+                      Show
+                    </Label>
+                  </div>
+                </div>
+              </div>
+              <Button size="sm" onClick={() => setIsAddCategoryDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Category
+              </Button>
+            </div>
+          </CardHeader>
+          {showCategories && (
+            <CardContent>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search categories..."
+                    className="pl-8"
+                    value={categorySearchTerm}
+                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                  />
+                </div>
+                {filteredCategories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">
+                      {categories.length === 0
+                        ? "No categories yet. Add your first category to organize products."
+                        : "No categories found matching your search."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Category Name</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Products</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredCategories.map((category) => (
+                          <TableRow key={category.id}>
+                            <TableCell className="font-medium">{category.name}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {category.description || "No description"}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {category._count?.products || 0}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => openEditCategoryDialog(category)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  onClick={() => handleDeleteCategory(category.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         {/* Product List Card */}
         <Card>
@@ -376,10 +807,10 @@ export default function Home() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon">
+                            <Button variant="outline" size="icon" onClick={() => openEditDialog(product)}>
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button variant="destructive" size="icon">
+                            <Button variant="destructive" size="icon" onClick={() => handleDelete(product.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
