@@ -5,12 +5,12 @@
     "sku": "LAPTOP-001",
     "price": 899.99,
     "cost": 650,
-    "stock": 12,
+    "stock": 2,
     "minStock": 3,
     "categoryId": 1761851113135,
     "id": 1761851112694,
     "createdAt": "2025-10-30T19:05:12.676Z",
-    "updatedAt": "2025-10-30T19:05:12.676Z"
+    "updatedAt": "2025-10-30T20:13:17.218Z"
   },
   {
     "name": "Wireless Mouse",
