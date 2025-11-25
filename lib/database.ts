@@ -17,11 +17,13 @@ export async function getCategories() {
 
 export async function addCategory(category: any) {
   await connectDB();
-  const newCategory = await Category.create(category);
+  const newCategory = await Category.create(category) as any;
   return {
-    ...newCategory.toObject(),
+    name: newCategory.name,
+    description: newCategory.description,
     id: newCategory._id.toString(),
-    _id: undefined,
+    createdAt: newCategory.createdAt,
+    updatedAt: newCategory.updatedAt,
   };
 }
 
@@ -36,9 +38,11 @@ export async function updateCategory(id: string, updates: any) {
   if (!updatedCategory) return null;
   
   return {
-    ...updatedCategory.toObject(),
+    name: updatedCategory.name,
+    description: updatedCategory.description,
     id: updatedCategory._id.toString(),
-    _id: undefined,
+    createdAt: updatedCategory.createdAt,
+    updatedAt: updatedCategory.updatedAt,
   };
 }
 
@@ -85,7 +89,7 @@ export async function addProduct(product: any) {
     categoryId: new Types.ObjectId(product.categoryId),
   };
   
-  const newProduct = await Product.create(productData);
+  const newProduct = await Product.create(productData) as any;
   const populatedProduct = await Product.findById(newProduct._id).populate('categoryId');
   
   if (!populatedProduct) return null;
@@ -200,17 +204,25 @@ export async function getUsers() {
 
 export async function addUser(user: any) {
   await connectDB();
-  const newUser = await User.create(user);
+  const newUser = await User.create(user) as any;
   return {
-    ...newUser.toObject(),
+    name: newUser.name,
+    email: newUser.email,
+    role: newUser.role,
     id: newUser._id.toString(),
-    _id: undefined,
+    createdAt: newUser.createdAt,
+    updatedAt: newUser.updatedAt,
   };
 }
 
 // Initialize with sample data
 export async function initializeData() {
-  await connectDB();
+  try {
+    await connectDB();
+  } catch (error: any) {
+    console.error('❌ Failed to connect to MongoDB:', error?.message || error);
+    throw new Error(`Database connection failed: ${error?.message || 'Unknown error'}`);
+  }
   
   try {
     const categories = await getCategories();
@@ -286,8 +298,8 @@ export async function initializeData() {
     }
 
     console.log('✅ Data initialized successfully');
-  } catch (error) {
-    console.error('❌ Error initializing data:', error);
+  } catch (error: any) {
+    console.error('❌ Error initializing data:', error?.message || error);
     throw error;
   }
 }

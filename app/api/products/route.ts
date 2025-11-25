@@ -20,10 +20,14 @@ export async function GET() {
     
     const products = await getProducts();
     return NextResponse.json(products)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching products:', error)
+    const errorMessage = error?.message || 'Failed to fetch products';
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { 
+        error: 'Failed to fetch products',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
@@ -78,11 +82,16 @@ export async function POST(request: NextRequest) {
       categoryId: categoryIdStr,
     });
 
-    // Fetch created product with category info
-    const products = await getProducts();
-    const newProduct = products.find((p: any) => p.id === product.id);
+    // Check if product was created successfully
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Failed to create product' },
+        { status: 500 }
+      )
+    }
 
-    return NextResponse.json(newProduct, { status: 201 })
+    // Return the created product (already has category info from addProduct)
+    return NextResponse.json(product, { status: 201 })
   } catch (error) {
     console.error('Error creating product:', error)
     return NextResponse.json(
