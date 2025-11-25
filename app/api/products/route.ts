@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Check if category exists
     const categories = await getCategories();
-    const categoryExists = categories.some((c: any) => c.id === categoryId);
+    const categoryIdNum = typeof categoryId === 'string' ? parseInt(categoryId) : categoryId;
+    const categoryExists = categories.some((c: any) => c.id === categoryIdNum);
 
     if (!categoryExists) {
       return NextResponse.json(
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       cost,
       stock,
       minStock,
-      categoryId,
+      categoryId: categoryIdNum,
     });
 
     // Fetch created product with category info
