@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardStatCard } from "@/components/dashboard-stat-card";
+import { DashboardCharts } from "@/components/dashboard-charts";
 import {
   DollarSign,
   Package2,
@@ -227,6 +228,9 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Charts */}
+        <DashboardCharts products={products} categories={categories} />
       </div>
     </div>
   );
