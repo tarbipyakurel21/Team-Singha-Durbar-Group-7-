@@ -7,13 +7,8 @@ import {
   Package2,
   LayoutDashboard,
   BoxSelect as BoxSeam,
-  History,
   Users2,
-  Settings,
   ChevronLeft,
-  BarChart3,
-  ShoppingCart,
-  Truck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -46,40 +41,10 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       href: "/categories",
     },
     {
-      label: "Stock In",
-      icon: ShoppingCart,
-      href: "/stock-in",
-      color: "text-orange-500",
-    },
-    {
-      label: "Stock Out",
-      icon: Truck,
-      href: "/stock-out",
-      color: "text-green-500",
-    },
-    {
-      label: "Reports",
-      icon: BarChart3,
-      color: "text-emerald-500",
-      href: "/reports",
-    },
-    {
-      label: "History",
-      icon: History,
-      href: "/history",
-      color: "text-blue-500",
-    },
-    {
       label: "Users",
       icon: Users2,
       href: "/users",
       color: "text-rose-500",
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      href: "/settings",
-      color: "text-gray-500",
     },
   ];
 
