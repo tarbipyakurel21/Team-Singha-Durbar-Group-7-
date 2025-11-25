@@ -48,12 +48,24 @@ export default function SettingsPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
   useEffect(() => {
+<<<<<<< HEAD
     // Check for saved theme preference
     const savedTheme = localStorage.getItem("theme");
     const isDark = savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
     setDarkMode(isDark);
     if (isDark) {
       document.documentElement.classList.add("dark");
+=======
+    // Check for saved theme preference - default to light mode
+    const savedTheme = localStorage.getItem("theme");
+    const isDark = savedTheme === "dark";
+    setDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      // Ensure light mode is set (remove dark class if present)
+      document.documentElement.classList.remove("dark");
+>>>>>>> origin/Yugesh
     }
 
     // Load saved preferences
