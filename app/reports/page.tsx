@@ -50,6 +50,7 @@ export default function ReportsPage() {
   const [dailySalesData, setDailySalesData] = useState<Array<{ day: string; sales: number; items: number }>>([]);
   const [topSellingItems, setTopSellingItems] = useState<Array<{ name: string; sales: number; revenue: number }>>([]);
   const [lowestSellingItems, setLowestSellingItems] = useState<Array<{ name: string; sales: number; revenue: number }>>([]);
+  const [mostSoldItemsChart, setMostSoldItemsChart] = useState<Array<{ name: string; quantity: number }>>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -144,12 +145,91 @@ export default function ReportsPage() {
         ? sortedByQuantity.slice(-5).reverse()
         : [];
       setLowestSellingItems(lowestItems);
+
+      // Prepare chart data for most sold items (top 10)
+      const chartData = sortedByQuantity.slice(0, 10).map(item => ({
+        name: item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name,
+        quantity: item.sales,
+      }));
+      setMostSoldItemsChart(chartData);
     } else {
       // Default empty data
       setDailySalesData([]);
       setTopSellingItems([]);
       setLowestSellingItems([]);
+      setMostSoldItemsChart([]);
     }
+  }, []);
+
+  // Listen for storage changes and page visibility to update when CSV is uploaded
+  useEffect(() => {
+    const updateChartData = () => {
+      const posData = JSON.parse(localStorage.getItem('posData') || '[]');
+      
+      if (posData.length > 0) {
+        const itemStats: Record<string, { quantity: number; revenue: number }> = {};
+
+        posData.forEach((sale: any) => {
+          if (!sale || (!sale['Item Name'] && !sale.itemName && !sale.ItemName)) {
+            return;
+          }
+
+          const itemName = sale['Item Name'] || sale.itemName || sale.ItemName || 'Unknown';
+          const quantity = parseInt(sale.Quantity || sale.quantity || '0');
+          const total = parseFloat(sale.Total || sale.total || '0');
+
+          if (isNaN(quantity) || quantity <= 0) {
+            return;
+          }
+
+          if (!itemStats[itemName]) {
+            itemStats[itemName] = { quantity: 0, revenue: 0 };
+          }
+          itemStats[itemName].quantity += quantity;
+          itemStats[itemName].revenue += total;
+        });
+
+        const itemsArray = Object.entries(itemStats)
+          .filter(([name, stats]) => name !== 'Unknown' && stats.quantity > 0)
+          .map(([name, stats]) => ({
+            name,
+            sales: stats.quantity,
+            revenue: stats.revenue,
+          }));
+
+        const sortedByQuantity = itemsArray.sort((a, b) => b.sales - a.sales);
+        const chartData = sortedByQuantity.slice(0, 10).map(item => ({
+          name: item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name,
+          quantity: item.sales,
+        }));
+        setMostSoldItemsChart(chartData);
+      } else {
+        setMostSoldItemsChart([]);
+      }
+    };
+
+    // Update when page becomes visible (user navigates back to reports)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updateChartData();
+      }
+    };
+
+    // Update when window gains focus
+    const handleFocus = () => {
+      updateChartData();
+    };
+
+    // Listen for storage events (when CSV is uploaded from another tab/window)
+    window.addEventListener('storage', updateChartData);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', updateChartData);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const lowStockItems = products.filter(p => p.stock <= p.minStock);
@@ -458,66 +538,57 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Daily Sales Chart */}
+        {/* Most Sold Items Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Daily Sales Overview</CardTitle>
+            <CardTitle>Most Sold Items</CardTitle>
             <CardDescription>
-              Sales data from uploaded POS transactions
+              Daily bar chart showing top selling items from uploaded POS data
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {dailySalesData.length > 0 ? (
+            {mostSoldItemsChart.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dailySalesData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="day" 
-                  className="text-xs"
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    name === "sales" 
-                      ? new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(value)
-                      : value,
-                    name === "sales" ? "Revenue" : "Items Sold"
-                  ]}
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "6px",
-                  }}
-                />
-                <Legend />
-                <Bar 
-                  dataKey="sales" 
-                  fill="hsl(var(--primary))" 
-                  name="Revenue"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar 
-                  dataKey="items" 
-                  fill="hsl(var(--chart-2))" 
-                  name="Items Sold"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                <BarChart data={mostSoldItemsChart} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    type="number"
+                    className="text-xs"
+                    tick={{ fontSize: 12 }}
+                    label={{ value: 'Quantity Sold', position: 'insideBottom', offset: -5 }}
+                  />
+                  <YAxis 
+                    type="category"
+                    dataKey="name"
+                    className="text-xs"
+                    tick={{ fontSize: 12 }}
+                    width={120}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `${value} units`,
+                      "Quantity Sold"
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <Bar 
+                    dataKey="quantity" 
+                    fill="hsl(var(--primary))" 
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-center">
                 <p className="text-lg font-medium text-muted-foreground mb-2">
-                  N/A
+                  No data available
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Upload POS data in Settings to view daily sales charts
+                  Upload POS data in Settings to view most sold items chart
                 </p>
               </div>
             )}
