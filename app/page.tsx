@@ -9,15 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProductSummaryCards } from "@/components/product-summary-cards";
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> origin/Arjun
-import { Package2, Plus, Search, Trash2, Edit2, Loader2 } from "lucide-react";
-=======
 import { CategoryDialog } from "@/components/category-dialog";
 import { Package2, Plus, Search, Trash2, Edit2, Loader2, FolderOpen } from "lucide-react";
->>>>>>> origin/karki_branch
 
 interface Category {
   id: number;
@@ -60,10 +53,6 @@ export default function Home() {
     categoryId: "",
   });
   const [submitting, setSubmitting] = useState(false);
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
 
   // Category management state
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
@@ -76,8 +65,6 @@ export default function Home() {
   });
   const [categorySubmitting, setCategorySubmitting] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 
   useEffect(() => {
     const loadData = async () => {
@@ -226,10 +213,6 @@ export default function Home() {
     }
   };
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
   // Category management functions
   const resetCategoryForm = () => {
     setCategoryFormData({ name: "", description: "" });
@@ -323,22 +306,17 @@ export default function Home() {
     setIsEditCategoryDialogOpen(true);
   };
 
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-<<<<<<< HEAD
-=======
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) ||
     category.description?.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
->>>>>>> origin/karki_branch
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/20 p-8">
@@ -601,10 +579,6 @@ export default function Home() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
 
           {/* Category Dialogs */}
           <CategoryDialog
@@ -635,17 +609,11 @@ export default function Home() {
             onSubmit={handleEditCategory}
             submitting={categorySubmitting}
           />
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
         </div>
 
         {/* Summary Cards */}
         <ProductSummaryCards products={products} categoriesCount={categories.length} />
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
         {/* Categories Management Section */}
         <Card>
           <CardHeader>
@@ -746,8 +714,6 @@ export default function Home() {
           )}
         </Card>
 
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
         {/* Product List Card */}
         <Card>
           <CardHeader>

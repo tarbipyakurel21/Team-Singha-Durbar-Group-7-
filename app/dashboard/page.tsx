@@ -1,44 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DashboardStatCard } from "@/components/dashboard-stat-card";
-import { DashboardCharts } from "@/components/dashboard-charts";
-=======
->>>>>>> origin/Arjun
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DashboardStatCard } from "@/components/dashboard-stat-card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 import {
   DollarSign,
   Package2,
   AlertTriangle,
   FolderOpen,
   Loader2,
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/Arjun
   TrendingUp,
   ShoppingCart,
   ArrowUpCircle,
   Settings,
   ChevronDown,
   ChevronUp,
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 } from "lucide-react";
 
 interface Product {
@@ -50,11 +29,6 @@ interface Product {
   stock: number;
   minStock: number;
   categoryId: number;
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/Arjun
   updatedAt?: string;
 }
 
@@ -63,10 +37,6 @@ interface RecentRestock {
   sku: string;
   quantity: number;
   date: string;
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 }
 
 interface Category {
@@ -79,14 +49,7 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
   const [isRestocksExpanded, setIsRestocksExpanded] = useState(false);
-=======
-<<<<<<< HEAD
-=======
-  const [isRestocksExpanded, setIsRestocksExpanded] = useState(false);
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 
   useEffect(() => {
     const loadData = async () => {
@@ -128,11 +91,6 @@ export default function DashboardPage() {
     0
   );
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/Arjun
   // Mock recent restocks (first 3)
   const recentRestocks: RecentRestock[] = [
     { name: "Business Laptop", sku: "LAPTOP-001", quantity: 5, date: "2 hours ago" },
@@ -140,12 +98,95 @@ export default function DashboardPage() {
     { name: "Standing Desk", sku: "DESK-001", quantity: 3, date: "1 day ago" },
   ];
 
-  // Mock daily sales summary
-  const dailySales = {
-    totalRevenue: 3289.88,
-    totalItems: 12,
-    topItem: "Business Laptop",
-  };
+  // Get POS data from localStorage
+  const [dailySales, setDailySales] = useState({
+    totalRevenue: 0,
+    totalItems: 0,
+    topItem: "N/A",
+    topItemQuantity: 0,
+    salesByCategory: {} as Record<string, number>,
+    hasData: false,
+  });
+
+  useEffect(() => {
+    // Load POS data from localStorage
+    const posData = JSON.parse(localStorage.getItem('posData') || '[]');
+    
+    if (posData.length > 0) {
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Filter today's sales
+      const todaySales = posData.filter((sale: any) => {
+        const saleDate = sale.Date || sale.date;
+        return saleDate === today || saleDate?.startsWith(today);
+      });
+
+      if (todaySales.length > 0) {
+        // Calculate totals
+        const totalRevenue = todaySales.reduce((sum: number, sale: any) => {
+          const total = parseFloat(sale.Total || sale.total || '0');
+          return sum + total;
+        }, 0);
+
+        const totalItems = todaySales.reduce((sum: number, sale: any) => {
+          const qty = parseInt(sale.Quantity || sale.quantity || '0');
+          return sum + qty;
+        }, 0);
+
+        // Find top item
+        const itemCounts: Record<string, number> = {};
+        todaySales.forEach((sale: any) => {
+          const itemName = sale['Item Name'] || sale.itemName || sale.ItemName;
+          const qty = parseInt(sale.Quantity || sale.quantity || '0');
+          if (itemName) {
+            itemCounts[itemName] = (itemCounts[itemName] || 0) + qty;
+          }
+        });
+
+        const topItemEntry = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])[0];
+        const topItem = topItemEntry ? topItemEntry[0] : 'N/A';
+        const topItemQuantity = topItemEntry ? topItemEntry[1] : 0;
+
+        // Calculate sales by category
+        const salesByCategory: Record<string, number> = {};
+        todaySales.forEach((sale: any) => {
+          const category = sale.Category || sale.category || 'Other';
+          const total = parseFloat(sale.Total || sale.total || '0');
+          salesByCategory[category] = (salesByCategory[category] || 0) + total;
+        });
+
+        setDailySales({
+          totalRevenue,
+          totalItems,
+          topItem,
+          topItemQuantity,
+          salesByCategory,
+          hasData: true,
+        });
+      } else {
+        // No today's data - show N/A
+        setDailySales({
+          totalRevenue: 0,
+          totalItems: 0,
+          topItem: 'N/A',
+          topItemQuantity: 0,
+          salesByCategory: {},
+          hasData: false,
+        });
+      }
+    } else {
+      // No POS data at all - show N/A
+      setDailySales({
+        totalRevenue: 0,
+        totalItems: 0,
+        topItem: 'N/A',
+        topItemQuantity: 0,
+        salesByCategory: {},
+        hasData: false,
+      });
+    }
+  }, []);
 
   // Basic refill recommendations (based on low stock)
   const refillRecommendations = products
@@ -158,10 +199,6 @@ export default function DashboardPage() {
       recommended: Math.max(p.minStock * 2, 10), // Recommend 2x min stock or 10, whichever is higher
     }));
 
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/20 p-8">
@@ -176,25 +213,11 @@ export default function DashboardPage() {
   }
 
   return (
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    <div className="min-h-screen bg-muted/20 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-=======
->>>>>>> origin/Arjun
     <div className="min-h-screen bg-muted/20 p-6">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
         </div>
 
         {/* Stats Grid */}
@@ -242,64 +265,6 @@ export default function DashboardPage() {
           />
         </div>
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-        {/* Recent Activity / Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {categories.slice(0, 5).map((category) => {
-                  const categoryProducts = products.filter(
-                    p => p.categoryId === category.id
-                  );
-                  const percentage = totalProducts > 0
-                    ? (categoryProducts.length / totalProducts) * 100
-                    : 0;
-
-                  return (
-                    <div key={category.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">
-                          {category.name}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {categoryProducts.length} products
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {categories.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No categories available
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Low Stock Alerts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {products
-                  .filter(p => p.stock <= p.minStock)
-                  .slice(0, 5)
-=======
->>>>>>> origin/Arjun
         {/* Recent Restocks */}
         <Card>
           <CardHeader className="pb-3">
@@ -369,10 +334,6 @@ export default function DashboardPage() {
                 {products
                   .filter(p => p.stock <= p.minStock)
                   .slice(0, 3)
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
                   .map((product) => (
                     <div
                       key={product.id}
@@ -395,18 +356,6 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 {lowStockCount === 0 && (
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    All products are well stocked! 🎉
-                  </p>
-                )}
-                {lowStockCount > 5 && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    +{lowStockCount - 5} more items need attention
-=======
->>>>>>> origin/Arjun
                   <p className="text-sm text-muted-foreground text-center py-3">
                     All products are well stocked
                   </p>
@@ -414,24 +363,11 @@ export default function DashboardPage() {
                 {lowStockCount > 3 && (
                   <p className="text-xs text-muted-foreground text-center">
                     +{lowStockCount - 3} more items need attention
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
                   </p>
                 )}
               </div>
             </CardContent>
           </Card>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-        </div>
-
-        {/* Charts */}
-        <DashboardCharts products={products} categories={categories} />
-=======
->>>>>>> origin/Arjun
 
           {/* Daily Sales Summary */}
           <Card>
@@ -450,39 +386,69 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Total Revenue</span>
                     <span className="text-base font-bold">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(dailySales.totalRevenue)}
+                      {dailySales.hasData ? (
+                        new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(dailySales.totalRevenue)
+                      ) : (
+                        "N/A"
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Items Sold</span>
-                    <span className="text-base font-semibold">{dailySales.totalItems}</span>
+                    <span className="text-base font-semibold">
+                      {dailySales.hasData ? dailySales.totalItems : "N/A"}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs text-muted-foreground">Top Item</span>
-                    <span className="text-xs font-medium">{dailySales.topItem}</span>
+                    <span className="text-xs font-medium">
+                      {dailySales.hasData ? (
+                        `${dailySales.topItem} ${dailySales.topItemQuantity > 0 ? `(${dailySales.topItemQuantity} sold)` : ''}`
+                      ) : (
+                        "N/A"
+                      )}
+                    </span>
                   </div>
+                  {Object.keys(dailySales.salesByCategory).length > 0 && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-xs text-muted-foreground mb-1">Sales by Category:</p>
+                      {Object.entries(dailySales.salesByCategory).map(([category, total]) => (
+                        <div key={category} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{category}</span>
+                          <span className="font-medium">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                            }).format(total)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-start gap-2">
-                    <Settings className="h-3 w-3 text-primary mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-primary mb-0.5">
-                        Upload Daily POS Data
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-1.5">
-                        Go to Settings to upload daily POS data
-                      </p>
-                      <Link href="/settings">
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs">
-                          Go to Settings
-                        </Button>
-                      </Link>
+                {!dailySales.hasData && (
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <div className="flex items-start gap-2">
+                      <Settings className="h-3 w-3 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-primary mb-0.5">
+                          Upload Daily POS Data
+                        </p>
+                        <p className="text-xs text-muted-foreground mb-1.5">
+                          Go to Settings to upload daily POS data
+                        </p>
+                        <Link href="/settings">
+                          <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                            Go to Settings
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -534,10 +500,6 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-<<<<<<< HEAD
-=======
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
       </div>
     </div>
   );

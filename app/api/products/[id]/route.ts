@@ -88,23 +88,9 @@ export async function PUT(
     
     // If updating category, verify it exists
     if (body.categoryId !== undefined) {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> origin/Arjun
-      const categoryIdNum = typeof body.categoryId === 'string' 
-        ? parseInt(body.categoryId) 
-        : body.categoryId;
-      const categories = await getCategories();
-      const categoryExists = categories.some((c: any) => c.id === categoryIdNum);
-<<<<<<< HEAD
-=======
-=======
       const categoryId = body.categoryId;
       const categories = await getCategories();
       const categoryExists = categories.some((c: any) => c.id === categoryId);
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
       
       if (!categoryExists) {
         return NextResponse.json(

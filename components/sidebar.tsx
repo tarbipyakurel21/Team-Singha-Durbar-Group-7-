@@ -8,15 +8,9 @@ import {
   LayoutDashboard,
   BoxSelect as BoxSeam,
   Users2,
+  Settings,
   ChevronLeft,
-<<<<<<< HEAD
   FileText,
-=======
-<<<<<<< HEAD
-=======
-  FileText,
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,34 +39,14 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     {
       label: "Settings",
       icon: Users2,
-<<<<<<< HEAD
       href: "/settings",
       color: "text-pink-700",
-=======
-<<<<<<< HEAD
-      color: "text-pink-700",
-      href: "/categories",
-=======
-      href: "/settings",
-      color: "text-pink-700",
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
     },
     {
       label: "Reports",
       icon: Package2,
-<<<<<<< HEAD
       href: "/reports",
       color: "text-red-500",
-=======
-<<<<<<< HEAD
-      href: "/users",
-      color: "text-rose-500",
-=======
-      href: "/reports",
-      color: "text-red-500",
->>>>>>> origin/karki_branch
->>>>>>> origin/Arjun
     },
   ];
 
