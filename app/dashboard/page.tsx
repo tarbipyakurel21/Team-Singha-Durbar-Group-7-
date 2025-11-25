@@ -1,23 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardStatCard } from "@/components/dashboard-stat-card";
+import { DashboardCharts } from "@/components/dashboard-charts";
+=======
+>>>>>>> origin/Arjun
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DashboardStatCard } from "@/components/dashboard-stat-card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
 import {
   DollarSign,
   Package2,
   AlertTriangle,
   FolderOpen,
   Loader2,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Arjun
   TrendingUp,
   ShoppingCart,
   ArrowUpCircle,
   Settings,
   ChevronDown,
   ChevronUp,
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
 } from "lucide-react";
 
 interface Product {
@@ -29,6 +50,11 @@ interface Product {
   stock: number;
   minStock: number;
   categoryId: number;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Arjun
   updatedAt?: string;
 }
 
@@ -37,6 +63,10 @@ interface RecentRestock {
   sku: string;
   quantity: number;
   date: string;
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
 }
 
 interface Category {
@@ -49,7 +79,14 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
   const [isRestocksExpanded, setIsRestocksExpanded] = useState(false);
+=======
+<<<<<<< HEAD
+=======
+  const [isRestocksExpanded, setIsRestocksExpanded] = useState(false);
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
 
   useEffect(() => {
     const loadData = async () => {
@@ -91,6 +128,11 @@ export default function DashboardPage() {
     0
   );
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Arjun
   // Mock recent restocks (first 3)
   const recentRestocks: RecentRestock[] = [
     { name: "Business Laptop", sku: "LAPTOP-001", quantity: 5, date: "2 hours ago" },
@@ -116,6 +158,10 @@ export default function DashboardPage() {
       recommended: Math.max(p.minStock * 2, 10), // Recommend 2x min stock or 10, whichever is higher
     }));
 
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/20 p-8">
@@ -130,11 +176,25 @@ export default function DashboardPage() {
   }
 
   return (
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    <div className="min-h-screen bg-muted/20 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+=======
+>>>>>>> origin/Arjun
     <div className="min-h-screen bg-muted/20 p-6">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
         </div>
 
         {/* Stats Grid */}
@@ -182,6 +242,64 @@ export default function DashboardPage() {
           />
         </div>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        {/* Recent Activity / Quick Stats */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Category Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {categories.slice(0, 5).map((category) => {
+                  const categoryProducts = products.filter(
+                    p => p.categoryId === category.id
+                  );
+                  const percentage = totalProducts > 0
+                    ? (categoryProducts.length / totalProducts) * 100
+                    : 0;
+
+                  return (
+                    <div key={category.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">
+                          {category.name}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {categoryProducts.length} products
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                {categories.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No categories available
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Low Stock Alerts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {products
+                  .filter(p => p.stock <= p.minStock)
+                  .slice(0, 5)
+=======
+>>>>>>> origin/Arjun
         {/* Recent Restocks */}
         <Card>
           <CardHeader className="pb-3">
@@ -251,6 +369,10 @@ export default function DashboardPage() {
                 {products
                   .filter(p => p.stock <= p.minStock)
                   .slice(0, 3)
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
                   .map((product) => (
                     <div
                       key={product.id}
@@ -273,6 +395,18 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 {lowStockCount === 0 && (
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    All products are well stocked! 🎉
+                  </p>
+                )}
+                {lowStockCount > 5 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{lowStockCount - 5} more items need attention
+=======
+>>>>>>> origin/Arjun
                   <p className="text-sm text-muted-foreground text-center py-3">
                     All products are well stocked
                   </p>
@@ -280,11 +414,24 @@ export default function DashboardPage() {
                 {lowStockCount > 3 && (
                   <p className="text-xs text-muted-foreground text-center">
                     +{lowStockCount - 3} more items need attention
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
                   </p>
                 )}
               </div>
             </CardContent>
           </Card>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        </div>
+
+        {/* Charts */}
+        <DashboardCharts products={products} categories={categories} />
+=======
+>>>>>>> origin/Arjun
 
           {/* Daily Sales Summary */}
           <Card>
@@ -387,6 +534,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+<<<<<<< HEAD
+=======
+>>>>>>> origin/karki_branch
+>>>>>>> origin/Arjun
       </div>
     </div>
   );

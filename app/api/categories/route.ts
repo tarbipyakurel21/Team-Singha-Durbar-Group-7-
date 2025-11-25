@@ -25,10 +25,14 @@ export async function GET() {
     });
 
     return NextResponse.json(categoriesWithCount)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching categories:', error)
+    const errorMessage = error?.message || 'Failed to fetch categories';
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { 
+        error: 'Failed to fetch categories',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }

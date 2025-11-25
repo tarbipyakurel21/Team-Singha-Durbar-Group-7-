@@ -10,7 +10,7 @@ interface CreateProductDto {
   cost: number;
   stock?: number;
   minStock?: number;
-  categoryId: number;
+  categoryId: string;
 }
 
 // GET /api/products - Get all products with category information
@@ -20,10 +20,14 @@ export async function GET() {
     
     const products = await getProducts();
     return NextResponse.json(products)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching products:', error)
+    const errorMessage = error?.message || 'Failed to fetch products';
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { 
+        error: 'Failed to fetch products',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
@@ -45,8 +49,13 @@ export async function POST(request: NextRequest) {
 
     // Check if category exists
     const categories = await getCategories();
+<<<<<<< HEAD
     const categoryIdNum = typeof categoryId === 'string' ? parseInt(categoryId) : categoryId;
     const categoryExists = categories.some((c: any) => c.id === categoryIdNum);
+=======
+    const categoryIdStr = typeof categoryId === 'string' ? categoryId : String(categoryId);
+    const categoryExists = categories.some((c: any) => c.id === categoryIdStr);
+>>>>>>> origin/Arjun
 
     if (!categoryExists) {
       return NextResponse.json(
@@ -75,14 +84,23 @@ export async function POST(request: NextRequest) {
       cost,
       stock,
       minStock,
+<<<<<<< HEAD
       categoryId: categoryIdNum,
+=======
+      categoryId: categoryIdStr,
+>>>>>>> origin/Arjun
     });
 
-    // Fetch created product with category info
-    const products = await getProducts();
-    const newProduct = products.find((p: any) => p.id === product.id);
+    // Check if product was created successfully
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Failed to create product' },
+        { status: 500 }
+      )
+    }
 
-    return NextResponse.json(newProduct, { status: 201 })
+    // Return the created product (already has category info from addProduct)
+    return NextResponse.json(product, { status: 201 })
   } catch (error) {
     console.error('Error creating product:', error)
     return NextResponse.json(
