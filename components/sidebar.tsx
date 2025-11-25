@@ -9,6 +9,10 @@ import {
   BoxSelect as BoxSeam,
   Users2,
   ChevronLeft,
+<<<<<<< HEAD
+=======
+  FileText,
+>>>>>>> origin/karki_branch
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,14 +41,24 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     {
       label: "Settings",
       icon: Users2,
+<<<<<<< HEAD
       color: "text-pink-700",
       href: "/categories",
+=======
+      href: "/settings",
+      color: "text-pink-700",
+>>>>>>> origin/karki_branch
     },
     {
       label: "Reports",
       icon: Package2,
+<<<<<<< HEAD
       href: "/users",
       color: "text-rose-500",
+=======
+      href: "/reports",
+      color: "text-red-500",
+>>>>>>> origin/karki_branch
     },
   ];
 

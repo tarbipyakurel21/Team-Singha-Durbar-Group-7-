@@ -119,4 +119,23 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Font size customization */
+  body.font-size-small {
+    font-size: 0.875rem;
+  }
+  body.font-size-medium {
+    font-size: 1rem;
+  }
+  body.font-size-large {
+    font-size: 1.125rem;
+  }
+  
+  /* Font family customization */
+  body.font-family-serif {
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  body.font-family-mono {
+    font-family: 'Courier New', monospace;
+  }
 }
