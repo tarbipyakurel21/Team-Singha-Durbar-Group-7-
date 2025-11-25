@@ -10,7 +10,7 @@ interface CreateProductDto {
   cost: number;
   stock?: number;
   minStock?: number;
-  categoryId: number;
+  categoryId: string;
 }
 
 // GET /api/products - Get all products with category information
@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Check if category exists
     const categories = await getCategories();
-    const categoryExists = categories.some((c: any) => c.id === categoryId);
+    const categoryIdStr = typeof categoryId === 'string' ? categoryId : String(categoryId);
+    const categoryExists = categories.some((c: any) => c.id === categoryIdStr);
 
     if (!categoryExists) {
       return NextResponse.json(
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       cost,
       stock,
       minStock,
-      categoryId,
+      categoryId: categoryIdStr,
     });
 
     // Fetch created product with category info

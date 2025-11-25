@@ -1,152 +1,188 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SettingDialog } from "@/components/setting-dialog";
-import { Settings, Plus, Search, Trash2, Edit2 } from "lucide-react";
-
-interface Setting {
-  id: number;
-  name: string;
-  value: string;
-  category: string;
-  description: string;
-  lastUpdated: string;
-}
-
-// Sample data - in production, this would come from an API or database
-const sampleSettings: Setting[] = [
-  {
-    id: 1,
-    name: "Company Name",
-    value: "PT Example Company",
-    category: "General",
-    description: "Company name that will be displayed throughout the system",
-    lastUpdated: "2024-03-20 10:30",
-  },
-  {
-    id: 2,
-    name: "Email Notifications",
-    value: "Enabled",
-    category: "Notifications",
-    description: "Email notification settings for system activities and alerts",
-    lastUpdated: "2024-03-20 09:15",
-  },
-  {
-    id: 3,
-    name: "Session Timeout",
-    value: "30 minutes",
-    category: "Security",
-    description: "User session timeout duration before requiring re-authentication",
-    lastUpdated: "2024-03-19 15:45",
-  },
-  {
-    id: 4,
-    name: "Currency Format",
-    value: "USD",
-    category: "General",
-    description: "Default currency format for displaying prices and values",
-    lastUpdated: "2024-03-19 14:20",
-  },
-  {
-    id: 5,
-    name: "API Integration",
-    value: "Active",
-    category: "Integration",
-    description: "External API integration status for third-party services",
-    lastUpdated: "2024-03-18 11:30",
-  },
-];
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  Settings, 
+  User, 
+  Lock, 
+  Moon, 
+  Sun, 
+  Database,
+  Save,
+  Loader2,
+  Type,
+  Bell,
+  Trash2,
+  Download,
+  Upload,
+  RotateCcw
+} from "lucide-react";
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Setting[]>(sampleSettings);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedSetting, setSelectedSetting] = useState<Setting | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    value: "",
-    category: "General",
-    description: "",
+  const [darkMode, setDarkMode] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    role: "Administrator",
+    phone: "+1 (555) 123-4567",
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [fontSettings, setFontSettings] = useState({
+    size: "medium",
+    family: "default",
+  });
+  const [lowStockAlerts, setLowStockAlerts] = useState(true);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
-  const filteredSettings = settings.filter(
-    (setting) =>
-      setting.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      setting.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      setting.value.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem("theme");
+    const isDark = savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    }
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      value: "",
-      category: "General",
-      description: "",
-    });
+    // Load saved preferences
+    const savedFontSize = localStorage.getItem("fontSize") || "medium";
+    const savedFontFamily = localStorage.getItem("fontFamily") || "default";
+    const savedLowStockAlerts = localStorage.getItem("lowStockAlerts") !== "false";
+    
+    setFontSettings({ size: savedFontSize, family: savedFontFamily });
+    setLowStockAlerts(savedLowStockAlerts);
+    
+    // Apply saved font settings
+    if (savedFontSize) {
+      document.body.className = document.body.className.replace(/font-size-\w+/g, "");
+      document.body.classList.add(`font-size-${savedFontSize}`);
+    }
+    if (savedFontFamily && savedFontFamily !== "default") {
+      document.body.className = document.body.className.replace(/font-family-\w+/g, "");
+      document.body.classList.add(`font-family-${savedFontFamily}`);
+    }
+  }, []);
+
+  const handleThemeToggle = (checked: boolean) => {
+    setDarkMode(checked);
+    if (checked) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
   };
 
-  const handleAdd = () => {
-    const newSetting: Setting = {
-      id: Math.max(...settings.map(s => s.id), 0) + 1,
-      ...formData,
-      lastUpdated: new Date().toISOString().slice(0, 16).replace("T", " "),
-    };
-    setSettings([newSetting, ...settings]);
-    setIsAddDialogOpen(false);
-    resetForm();
+  const handleProfileSave = () => {
+    setSubmitting(true);
+    // Mock save - in real app, this would call an API
+    setTimeout(() => {
+      setSubmitting(false);
+      setIsProfileDialogOpen(false);
+      alert("Profile updated successfully!");
+    }, 1000);
   };
 
-  const handleEdit = () => {
-    if (!selectedSetting) return;
-
-    const updatedSettings = settings.map((setting) =>
-      setting.id === selectedSetting.id
-        ? {
-            ...setting,
-            ...formData,
-            lastUpdated: new Date().toISOString().slice(0, 16).replace("T", " "),
-          }
-        : setting
-    );
-    setSettings(updatedSettings);
-    setIsEditDialogOpen(false);
-    setSelectedSetting(null);
-    resetForm();
+  const handlePasswordChange = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert("New passwords do not match!");
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      alert("Password must be at least 8 characters long!");
+      return;
+    }
+    setSubmitting(true);
+    // Mock save - in real app, this would call an API
+    setTimeout(() => {
+      setSubmitting(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setIsPasswordDialogOpen(false);
+      alert("Password changed successfully!");
+    }, 1000);
   };
 
-  const handleDelete = (id: number) => {
-    if (!confirm("Are you sure you want to delete this setting?")) return;
-    setSettings(settings.filter((setting) => setting.id !== id));
+  const handleFontSizeChange = (size: string) => {
+    setFontSettings({ ...fontSettings, size });
+    localStorage.setItem("fontSize", size);
+    // Apply font size class to body
+    document.body.className = document.body.className.replace(/font-size-\w+/g, "");
+    document.body.classList.add(`font-size-${size}`);
   };
 
-  const openEditDialog = (setting: Setting) => {
-    setSelectedSetting(setting);
-    setFormData({
-      name: setting.name,
-      value: setting.value,
-      category: setting.category,
-      description: setting.description,
-    });
-    setIsEditDialogOpen(true);
+  const handleFontFamilyChange = (family: string) => {
+    setFontSettings({ ...fontSettings, family });
+    localStorage.setItem("fontFamily", family);
+    // Apply font family class to body
+    document.body.className = document.body.className.replace(/font-family-\w+/g, "");
+    if (family !== "default") {
+      document.body.classList.add(`font-family-${family}`);
+    }
   };
 
-  const getCategoryBadgeStyle = (category: string) => {
-    switch (category) {
-      case "Security":
-        return "bg-red-500/10 text-red-600 dark:text-red-400";
-      case "Notifications":
-        return "bg-blue-500/10 text-blue-600 dark:text-blue-400";
-      case "Integration":
-        return "bg-purple-500/10 text-purple-600 dark:text-purple-400";
-      case "General":
-        return "bg-muted text-muted-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
+  const handleLowStockAlertsToggle = (checked: boolean) => {
+    setLowStockAlerts(checked);
+    localStorage.setItem("lowStockAlerts", checked.toString());
+  };
+
+  const handleDataExport = () => {
+    alert("Data export functionality would be implemented here - exports all products and categories as JSON");
+  };
+
+  const handleDataImport = () => {
+    alert("Data import functionality would be implemented here - imports from a backup JSON file");
+  };
+
+  const handleDeleteAllProducts = () => {
+    if (confirm("Are you sure you want to delete ALL products? This action cannot be undone.")) {
+      alert("Delete all products functionality would be implemented here");
+    }
+  };
+
+  const handleDeleteAllCategories = () => {
+    if (confirm("Are you sure you want to delete ALL categories? This action cannot be undone. Products with these categories may be affected.")) {
+      alert("Delete all categories functionality would be implemented here");
+    }
+  };
+
+  const handleResetSettings = () => {
+    if (confirm("Are you sure you want to reset all settings to default? This will reset your preferences.")) {
+      localStorage.removeItem("theme");
+      localStorage.removeItem("fontSize");
+      localStorage.removeItem("fontFamily");
+      localStorage.removeItem("lowStockAlerts");
+      setDarkMode(false);
+      setFontSettings({ size: "medium", family: "default" });
+      setLowStockAlerts(true);
+      document.documentElement.classList.remove("dark");
+      document.body.className = document.body.className.replace(/font-size-\w+/g, "");
+      document.body.className = document.body.className.replace(/font-family-\w+/g, "");
+      alert("Settings reset to default values!");
+    }
+  };
+
+  const handleClearStoredData = () => {
+    if (confirm("Are you sure you want to clear all stored data? This will remove all local storage data. This action cannot be undone.")) {
+      localStorage.clear();
+      alert("All stored data has been cleared!");
+      window.location.reload();
     }
   };
 
@@ -157,135 +193,393 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Settings className="h-8 w-8" />
-            System Settings
+            Settings
           </h1>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Setting
-          </Button>
         </div>
 
-        {/* Settings List Card */}
+        {/* Account Settings Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Settings List</CardTitle>
-            <div className="relative mt-4">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, category, or value..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <CardTitle>Account Settings</CardTitle>
+            <CardDescription>
+              Manage your profile information and security settings
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            {filteredSettings.length === 0 ? (
-              <div className="text-center py-12">
-                <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No settings found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {settings.length === 0
-                    ? "Get started by adding your first setting."
-                    : "Try adjusting your search terms."}
-                </p>
-                {settings.length === 0 && (
-                  <Button onClick={() => setIsAddDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Setting
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Setting Name</TableHead>
-                      <TableHead>Value</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSettings.map((setting) => (
-                      <TableRow key={setting.id}>
-                        <TableCell className="font-medium">{setting.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{setting.value}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${getCategoryBadgeStyle(
-                              setting.category
-                            )}`}
-                          >
-                            {setting.category}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <div className="truncate text-muted-foreground" title={setting.description}>
-                            {setting.description}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm text-muted-foreground">
-                          {setting.lastUpdated}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => openEditDialog(setting)}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => handleDelete(setting.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+          <CardContent className="space-y-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsProfileDialogOpen(true)}
+              className="w-full justify-start"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Profile Information
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsPasswordDialogOpen(true)}
+              className="w-full justify-start"
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Change Password
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Add Dialog */}
-        <SettingDialog
-          open={isAddDialogOpen}
-          onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (!open) resetForm();
-          }}
-          mode="add"
-          formData={formData}
-          onFormChange={setFormData}
-          onSubmit={handleAdd}
-        />
+        {/* Profile Dialog */}
+        <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Information
+              </DialogTitle>
+              <DialogDescription>
+                Update your personal information and account details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="dialog-name">Full Name</Label>
+                  <Input
+                    id="dialog-name"
+                    value={profileData.name}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, name: e.target.value })
+                    }
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dialog-email">Email Address</Label>
+                  <Input
+                    id="dialog-email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, email: e.target.value })
+                    }
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dialog-role">Role</Label>
+                  <Input
+                    id="dialog-role"
+                    value={profileData.role}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dialog-phone">Phone Number</Label>
+                  <Input
+                    id="dialog-phone"
+                    type="tel"
+                    value={profileData.phone}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, phone: e.target.value })
+                    }
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsProfileDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleProfileSave} disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {/* Edit Dialog */}
-        <SettingDialog
-          open={isEditDialogOpen}
-          onOpenChange={(open) => {
-            setIsEditDialogOpen(open);
-            if (!open) {
-              setSelectedSetting(null);
-              resetForm();
-            }
-          }}
-          mode="edit"
-          formData={formData}
-          onFormChange={setFormData}
-          onSubmit={handleEdit}
-        />
+        {/* Change Password Dialog */}
+        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Change Password
+              </DialogTitle>
+              <DialogDescription>
+                Update your password to keep your account secure
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="dialog-currentPassword">Current Password</Label>
+                <Input
+                  id="dialog-currentPassword"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                  placeholder="Enter your current password"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dialog-newPassword">New Password</Label>
+                <Input
+                  id="dialog-newPassword"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      newPassword: e.target.value,
+                    })
+                  }
+                  placeholder="Enter your new password"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dialog-confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="dialog-confirmPassword"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  placeholder="Confirm your new password"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsPasswordDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordChange} disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                <Lock className="h-4 w-4 mr-2" />
+                Update Password
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Appearance Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              {darkMode ? (
+                <Moon className="h-5 w-5 text-primary" />
+              ) : (
+                <Sun className="h-5 w-5 text-primary" />
+              )}
+              <CardTitle>Appearance</CardTitle>
+            </div>
+            <CardDescription>
+              Customize the appearance and theme of the application
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="dark-mode" className="text-base">
+                  Dark Mode
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Switch between light and dark theme
+                </p>
+              </div>
+              <Switch
+                id="dark-mode"
+                checked={darkMode}
+                onCheckedChange={handleThemeToggle}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Font Settings Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Type className="h-5 w-5 text-primary" />
+              <CardTitle>Font Settings</CardTitle>
+            </div>
+            <CardDescription>
+              Customize font size and type for better readability
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="font-size">Font Size</Label>
+                <Select
+                  value={fontSettings.size}
+                  onValueChange={handleFontSizeChange}
+                >
+                  <SelectTrigger id="font-size">
+                    <SelectValue placeholder="Select font size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="font-family">Font Family</Label>
+                <Select
+                  value={fontSettings.family}
+                  onValueChange={handleFontFamilyChange}
+                >
+                  <SelectTrigger id="font-family">
+                    <SelectValue placeholder="Select font family" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="serif">Serif</SelectItem>
+                    <SelectItem value="mono">Monospace</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notification Preferences Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <CardTitle>Notification Preferences</CardTitle>
+            </div>
+            <CardDescription>
+              Manage your notification settings and alerts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="low-stock-alerts" className="text-base">
+                  Low Stock Alerts
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications when product stock falls below minimum threshold
+                </p>
+              </div>
+              <Switch
+                id="low-stock-alerts"
+                checked={lowStockAlerts}
+                onCheckedChange={handleLowStockAlertsToggle}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Data Management Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              <CardTitle>Data Management</CardTitle>
+            </div>
+            <CardDescription>
+              Export, import, delete, or reset your application data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Backup & Restore */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Backup & Restore</Label>
+              <div className="flex flex-col gap-3 md:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={handleDataExport}
+                  className="flex-1"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Backup
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleDataImport}
+                  className="flex-1"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Backup
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Export your data as JSON backup or import from a backup file
+              </p>
+            </div>
+
+            {/* Delete Data */}
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-base font-semibold">Delete Data</Label>
+              <div className="flex flex-col gap-3 md:flex-row">
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAllProducts}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All Products
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAllCategories}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All Categories
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground text-destructive">
+                Permanently delete all products or categories. This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Reset & Clear */}
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-base font-semibold">Reset & Clear</Label>
+              <div className="flex flex-col gap-3 md:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={handleResetSettings}
+                  className="flex-1"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset Settings
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleClearStoredData}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Stored Data
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Reset all settings to default values or clear all local storage data
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -13,10 +13,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
         { status: 400 }
@@ -58,10 +57,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
         { status: 400 }
@@ -139,10 +137,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params; // Await params in Next.js 15+
-    const id = parseInt(idString);
+    const { id } = await params; // Await params in Next.js 15+
     
-    if (isNaN(id)) {
+    if (!id || id.length !== 24) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
         { status: 400 }
