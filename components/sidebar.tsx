@@ -12,8 +12,6 @@ import {
   Settings,
   ChevronLeft,
   BarChart3,
-  ShoppingCart,
-  Truck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,18 +42,6 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: Package2,
       color: "text-pink-700",
       href: "/categories",
-    },
-    {
-      label: "Stock In",
-      icon: ShoppingCart,
-      href: "/stock-in",
-      color: "text-orange-500",
-    },
-    {
-      label: "Stock Out",
-      icon: Truck,
-      href: "/stock-out",
-      color: "text-green-500",
     },
     {
       label: "Reports",
