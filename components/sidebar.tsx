@@ -7,7 +7,6 @@ import {
   Package2,
   LayoutDashboard,
   BoxSelect as BoxSeam,
-  Users2,
   Settings,
   ChevronLeft,
   FileText,
@@ -37,16 +36,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       color: "text-violet-500",
     },
     {
-      label: "Settings",
-      icon: Users2,
-      href: "/settings",
-      color: "text-pink-700",
-    },
-    {
       label: "Reports",
-      icon: Package2,
+      icon: FileText,
       href: "/reports",
       color: "text-red-500",
+    },
+    {
+      label: "Settings",
+      icon: Settings,
+      href: "/settings",
+      color: "text-pink-700",
     },
   ];
 
