@@ -64,7 +64,6 @@ export async function PUT(
     
     const body: UpdateProductDto = await request.json();
     
-    // Check if product exists
     const existingProduct = await getProductById(id);
     if (!existingProduct) {
       return NextResponse.json(
@@ -73,7 +72,6 @@ export async function PUT(
       )
     }
     
-    // If updating SKU, check for duplicates
     if (body.sku && body.sku !== existingProduct.sku) {
       const products = await getProducts();
       const duplicateSku = products.find((p: any) => p.sku === body.sku && p.id !== id);
@@ -86,7 +84,6 @@ export async function PUT(
       }
     }
     
-    // If updating category, verify it exists
     if (body.categoryId !== undefined) {
       const categoryId = body.categoryId;
       const categories = await getCategories();
@@ -100,10 +97,8 @@ export async function PUT(
       }
     }
     
-    // Update product
     await updateProduct(id, body);
     
-    // Fetch updated product with category info
     const product = await getProductById(id);
     return NextResponse.json(product)
   } catch (error) {

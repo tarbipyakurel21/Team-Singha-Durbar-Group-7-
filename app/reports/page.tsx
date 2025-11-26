@@ -71,16 +71,13 @@ export default function ReportsPage() {
   }, []);
 
   useEffect(() => {
-    // Load and process POS data from localStorage
     const posData = JSON.parse(localStorage.getItem('posData') || '[]');
     
     if (posData.length > 0) {
-      // Group sales by date
       const salesByDate: Record<string, { sales: number; items: number }> = {};
       const itemStats: Record<string, { quantity: number; revenue: number }> = {};
 
       posData.forEach((sale: any) => {
-        // Skip invalid entries
         if (!sale || (!sale['Item Name'] && !sale.itemName && !sale.ItemName)) {
           return;
         }
@@ -90,12 +87,10 @@ export default function ReportsPage() {
         const quantity = parseInt(sale.Quantity || sale.quantity || '0');
         const total = parseFloat(sale.Total || sale.total || '0');
 
-        // Skip if quantity is 0 or invalid
         if (isNaN(quantity) || quantity <= 0) {
           return;
         }
 
-        // Group by date
         if (date) {
           if (!salesByDate[date]) {
             salesByDate[date] = { sales: 0, items: 0 };
@@ -104,7 +99,6 @@ export default function ReportsPage() {
           salesByDate[date].items += quantity;
         }
 
-        // Track item stats - aggregate by item name
         if (!itemStats[itemName]) {
           itemStats[itemName] = { quantity: 0, revenue: 0 };
         }
@@ -112,7 +106,6 @@ export default function ReportsPage() {
         itemStats[itemName].revenue += total;
       });
 
-      // Convert to daily sales array (last 7 days or all available)
       const dates = Object.keys(salesByDate).sort();
       const last7Days = dates.slice(-7);
       const dailyData = last7Days.map(date => {
@@ -125,7 +118,6 @@ export default function ReportsPage() {
       });
       setDailySalesData(dailyData);
 
-      // Calculate top and lowest selling items
       const itemsArray = Object.entries(itemStats)
         .filter(([name, stats]) => name !== 'Unknown' && stats.quantity > 0)
         .map(([name, stats]) => ({
@@ -134,26 +126,21 @@ export default function ReportsPage() {
           revenue: stats.revenue,
         }));
 
-      // Sort by quantity sold (units sold) - descending for top, ascending for lowest
       const sortedByQuantity = itemsArray.sort((a, b) => b.sales - a.sales);
       
-      // Top selling = highest quantity
       setTopSellingItems(sortedByQuantity.slice(0, 5));
       
-      // Lowest selling = lowest quantity (but only if we have multiple items)
       const lowestItems = sortedByQuantity.length > 0 
         ? sortedByQuantity.slice(-5).reverse()
         : [];
       setLowestSellingItems(lowestItems);
 
-      // Prepare chart data for most sold items (top 10)
       const chartData = sortedByQuantity.slice(0, 10).map(item => ({
         name: item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name,
         quantity: item.sales,
       }));
       setMostSoldItemsChart(chartData);
     } else {
-      // Default empty data
       setDailySalesData([]);
       setTopSellingItems([]);
       setLowestSellingItems([]);
@@ -161,7 +148,6 @@ export default function ReportsPage() {
     }
   }, []);
 
-  // Listen for storage changes and page visibility to update when CSV is uploaded
   useEffect(() => {
     const updateChartData = () => {
       const posData = JSON.parse(localStorage.getItem('posData') || '[]');
@@ -208,19 +194,16 @@ export default function ReportsPage() {
       }
     };
 
-    // Update when page becomes visible (user navigates back to reports)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         updateChartData();
       }
     };
 
-    // Update when window gains focus
     const handleFocus = () => {
       updateChartData();
     };
 
-    // Listen for storage events (when CSV is uploaded from another tab/window)
     window.addEventListener('storage', updateChartData);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);

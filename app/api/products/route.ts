@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
     const body: CreateProductDto = await request.json()
     const { name, description, sku, price, cost, stock, minStock, categoryId } = body
 
-    // Validate required fields
     if (!name || !sku || !price || !cost || !categoryId) {
       return NextResponse.json(
         { error: 'Missing required fields: name, sku, price, cost, categoryId' },
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if category exists
     const categories = await getCategories();
     const categoryIdStr = typeof categoryId === 'string' ? categoryId : String(categoryId);
     const categoryExists = categories.some((c: any) => c.id === categoryIdStr);
@@ -59,7 +57,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check for duplicate SKU
     const existingProducts = await getProducts();
     const existingProduct = existingProducts.find((p: any) => p.sku === sku);
 
@@ -70,7 +67,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create product
     const product = await addProduct({
       name,
       description,
@@ -82,7 +78,6 @@ export async function POST(request: NextRequest) {
       categoryId: categoryIdStr,
     });
 
-    // Check if product was created successfully
     if (!product) {
       return NextResponse.json(
         { error: 'Failed to create product' },
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Return the created product (already has category info from addProduct)
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     console.error('Error creating product:', error)

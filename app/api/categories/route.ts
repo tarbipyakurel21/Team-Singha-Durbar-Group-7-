@@ -15,7 +15,6 @@ export async function GET() {
     const categories = await getCategories();
     const products = await getProducts();
     
-    // Calculate actual product count for each category
     const categoriesWithCount = categories.map((category: any) => {
       const productCount = products.filter((p: any) => p.categoryId === category.id).length;
       return {
@@ -44,7 +43,6 @@ export async function POST(request: NextRequest) {
     const body: CreateCategoryDto = await request.json()
     const { name, description } = body
 
-    // Validate required fields
     if (!name || name.trim() === '') {
       return NextResponse.json(
         { error: 'Category name is required' },
@@ -52,7 +50,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check for duplicate name (case-insensitive)
     const existingCategories = await getCategories();
     const existingCategory = existingCategories.find(
       (c: any) => c.name.toLowerCase() === name.trim().toLowerCase()
@@ -65,7 +62,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create category
     const category = await addCategory({
       name: name.trim(),
       description: description?.trim() || '',

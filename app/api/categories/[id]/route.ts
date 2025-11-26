@@ -32,7 +32,6 @@ export async function GET(
       )
     }
     
-    // Add product count
     const products = await getProducts();
     const productCount = products.filter((p: any) => p.categoryId === id).length;
     
@@ -68,7 +67,6 @@ export async function PUT(
     
     const body: UpdateCategoryDto = await request.json();
     
-    // Check if category exists
     const categories = await getCategories();
     const existingCategory = categories.find((c: any) => c.id === id);
     
@@ -79,7 +77,6 @@ export async function PUT(
       )
     }
     
-    // If updating name, check for duplicates (case-insensitive)
     if (body.name) {
       const trimmedName = body.name.trim();
       
@@ -104,15 +101,12 @@ export async function PUT(
       body.name = trimmedName;
     }
     
-    // Sanitize description
     if (body.description !== undefined) {
       body.description = body.description.trim();
     }
     
-    // Update category
     const updatedCategory = await updateCategory(id, body);
     
-    // Add product count
     const products = await getProducts();
     const productCount = products.filter((p: any) => p.categoryId === id).length;
     
@@ -146,7 +140,6 @@ export async function DELETE(
       )
     }
     
-    // Check if category has products
     const products = await getProducts();
     const hasProducts = products.some((p: any) => p.categoryId === id);
     

@@ -17,7 +17,6 @@ interface User {
   lastActive: string;
 }
 
-// Sample data - in production, this would come from an API
 const sampleUsers: User[] = [
   {
     id: 1,

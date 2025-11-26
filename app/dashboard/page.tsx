@@ -78,27 +78,23 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
-  // Calculate stats
   const totalProducts = products.length;
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
   const totalValue = products.reduce((acc, p) => acc + (p.price * p.stock), 0);
   const lowStockCount = products.filter(p => p.stock <= p.minStock).length;
   const totalCategories = categories.length;
 
-  // Calculate potential profit (price - cost) * stock
   const potentialProfit = products.reduce(
     (acc, p) => acc + ((p.price - p.cost) * p.stock),
     0
   );
 
-  // Mock recent restocks (first 3)
   const recentRestocks: RecentRestock[] = [
     { name: "Business Laptop", sku: "LAPTOP-001", quantity: 5, date: "2 hours ago" },
     { name: "Wireless Mouse", sku: "MOUSE-001", quantity: 20, date: "5 hours ago" },
     { name: "Standing Desk", sku: "DESK-001", quantity: 3, date: "1 day ago" },
   ];
 
-  // Get POS data from localStorage
   const [dailySales, setDailySales] = useState({
     totalRevenue: 0,
     totalItems: 0,
@@ -109,21 +105,17 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    // Load POS data from localStorage
     const posData = JSON.parse(localStorage.getItem('posData') || '[]');
     
     if (posData.length > 0) {
-      // Get today's date
       const today = new Date().toISOString().split('T')[0];
       
-      // Filter today's sales
       const todaySales = posData.filter((sale: any) => {
         const saleDate = sale.Date || sale.date;
         return saleDate === today || saleDate?.startsWith(today);
       });
 
       if (todaySales.length > 0) {
-        // Calculate totals
         const totalRevenue = todaySales.reduce((sum: number, sale: any) => {
           const total = parseFloat(sale.Total || sale.total || '0');
           return sum + total;
@@ -134,7 +126,6 @@ export default function DashboardPage() {
           return sum + qty;
         }, 0);
 
-        // Find top item
         const itemCounts: Record<string, number> = {};
         todaySales.forEach((sale: any) => {
           const itemName = sale['Item Name'] || sale.itemName || sale.ItemName;
@@ -148,7 +139,6 @@ export default function DashboardPage() {
         const topItem = topItemEntry ? topItemEntry[0] : 'N/A';
         const topItemQuantity = topItemEntry ? topItemEntry[1] : 0;
 
-        // Calculate sales by category
         const salesByCategory: Record<string, number> = {};
         todaySales.forEach((sale: any) => {
           const category = sale.Category || sale.category || 'Other';

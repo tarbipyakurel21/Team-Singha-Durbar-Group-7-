@@ -220,7 +220,6 @@ export async function initializeData() {
   try {
     await connectDB();
   } catch (error: any) {
-    console.error('❌ Failed to connect to MongoDB:', error?.message || error);
     throw new Error(`Database connection failed: ${error?.message || 'Unknown error'}`);
   }
   
@@ -297,9 +296,7 @@ export async function initializeData() {
       }
     }
 
-    console.log('✅ Data initialized successfully');
   } catch (error: any) {
-    console.error('❌ Error initializing data:', error?.message || error);
     throw error;
   }
 }

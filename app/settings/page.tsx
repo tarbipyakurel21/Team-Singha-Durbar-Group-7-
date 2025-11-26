@@ -49,18 +49,15 @@ export default function SettingsPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Check for saved theme preference - default to light mode
     const savedTheme = localStorage.getItem("theme");
     const isDark = savedTheme === "dark";
     setDarkMode(isDark);
     if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
-      // Ensure light mode is set (remove dark class if present)
       document.documentElement.classList.remove("dark");
     }
 
-    // Load saved preferences
     const savedFontSize = localStorage.getItem("fontSize") || "medium";
     const savedFontFamily = localStorage.getItem("fontFamily") || "default";
     const savedLowStockAlerts = localStorage.getItem("lowStockAlerts") !== "false";
@@ -68,7 +65,6 @@ export default function SettingsPage() {
     setFontSettings({ size: savedFontSize, family: savedFontFamily });
     setLowStockAlerts(savedLowStockAlerts);
     
-    // Apply saved font settings
     if (savedFontSize) {
       document.body.className = document.body.className.replace(/font-size-\w+/g, "");
       document.body.classList.add(`font-size-${savedFontSize}`);
@@ -92,7 +88,6 @@ export default function SettingsPage() {
 
   const handleProfileSave = () => {
     setSubmitting(true);
-    // Mock save - in real app, this would call an API
     setTimeout(() => {
       setSubmitting(false);
       setIsProfileDialogOpen(false);
@@ -110,7 +105,6 @@ export default function SettingsPage() {
       return;
     }
     setSubmitting(true);
-    // Mock save - in real app, this would call an API
     setTimeout(() => {
       setSubmitting(false);
       setPasswordData({
@@ -167,7 +161,6 @@ export default function SettingsPage() {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       try {
-        // Parse CSV
         const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
         if (lines.length < 2) {
           alert('CSV file must have at least a header row and one data row');
@@ -179,35 +172,29 @@ export default function SettingsPage() {
         const salesData = [];
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i].trim();
-          if (!line) continue; // Skip empty lines
+          if (!line) continue;
           
           const values = line.split(',').map(v => v.trim());
-          // Only process if we have the right number of columns and at least one non-empty value
           if (values.length === headers.length && values.some(v => v)) {
             const record: any = {};
             headers.forEach((header, index) => {
               record[header] = values[index] || '';
             });
-            // Only add if we have essential data (Item Name and Quantity)
             if (record['Item Name'] && record['Quantity']) {
               salesData.push(record);
             }
           }
         }
 
-        // Get the date from the first record (all records should be same date for daily data)
         const uploadDate = salesData.length > 0 ? (salesData[0].Date || salesData[0].date || '') : '';
         
-        // Store in localStorage - replace data for this date instead of appending
         const existingData = JSON.parse(localStorage.getItem('posData') || '[]');
         
-        // Remove existing data for this date (if any)
         const filteredData = existingData.filter((record: any) => {
           const recordDate = record.Date || record.date || '';
           return recordDate !== uploadDate;
         });
         
-        // Add new data for this date
         const newData = [...filteredData, ...salesData];
         localStorage.setItem('posData', JSON.stringify(newData));
         
