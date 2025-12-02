@@ -108,26 +108,28 @@ export default function DashboardPage() {
     const posData = JSON.parse(localStorage.getItem('posData') || '[]');
     
     if (posData.length > 0) {
-      const today = new Date().toISOString().split('T')[0];
+      const allDates = posData.map((sale: any) => sale.Date || sale.date).filter(Boolean);
+      const uniqueDates = [...new Set(allDates)].sort().reverse();
+      const mostRecentDate = uniqueDates[0];
       
-      const todaySales = posData.filter((sale: any) => {
+      const recentSales = posData.filter((sale: any) => {
         const saleDate = sale.Date || sale.date;
-        return saleDate === today || saleDate?.startsWith(today);
+        return saleDate === mostRecentDate;
       });
 
-      if (todaySales.length > 0) {
-        const totalRevenue = todaySales.reduce((sum: number, sale: any) => {
+      if (recentSales.length > 0) {
+        const totalRevenue = recentSales.reduce((sum: number, sale: any) => {
           const total = parseFloat(sale.Total || sale.total || '0');
           return sum + total;
         }, 0);
 
-        const totalItems = todaySales.reduce((sum: number, sale: any) => {
+        const totalItems = recentSales.reduce((sum: number, sale: any) => {
           const qty = parseInt(sale.Quantity || sale.quantity || '0');
           return sum + qty;
         }, 0);
 
         const itemCounts: Record<string, number> = {};
-        todaySales.forEach((sale: any) => {
+        recentSales.forEach((sale: any) => {
           const itemName = sale['Item Name'] || sale.itemName || sale.ItemName;
           const qty = parseInt(sale.Quantity || sale.quantity || '0');
           if (itemName) {
@@ -140,7 +142,7 @@ export default function DashboardPage() {
         const topItemQuantity = topItemEntry ? topItemEntry[1] : 0;
 
         const salesByCategory: Record<string, number> = {};
-        todaySales.forEach((sale: any) => {
+        recentSales.forEach((sale: any) => {
           const category = sale.Category || sale.category || 'Other';
           const total = parseFloat(sale.Total || sale.total || '0');
           salesByCategory[category] = (salesByCategory[category] || 0) + total;
@@ -155,7 +157,6 @@ export default function DashboardPage() {
           hasData: true,
         });
       } else {
-        // No today's data - show N/A
         setDailySales({
           totalRevenue: 0,
           totalItems: 0,
@@ -166,7 +167,6 @@ export default function DashboardPage() {
         });
       }
     } else {
-      // No POS data at all - show N/A
       setDailySales({
         totalRevenue: 0,
         totalItems: 0,
@@ -367,7 +367,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-base">Daily Sales Summary</CardTitle>
               </div>
               <CardDescription className="text-xs">
-                Today's sales from POS data
+                Sales from uploaded POS data
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">

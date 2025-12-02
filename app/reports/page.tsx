@@ -533,38 +533,38 @@ export default function ReportsPage() {
             {mostSoldItemsChart.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={mostSoldItemsChart} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
                     type="number"
-                    className="text-xs"
-                    tick={{ fontSize: 12 }}
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
                     label={{ value: 'Quantity Sold', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis 
+                />
+                <YAxis 
                     type="category"
                     dataKey="name"
-                    className="text-xs"
-                    tick={{ fontSize: 12 }}
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
                     width={120}
-                  />
-                  <Tooltip
+                />
+                <Tooltip
                     formatter={(value: number) => [
                       `${value} units`,
                       "Quantity Sold"
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "6px",
-                    }}
-                  />
-                  <Bar 
+                  ]}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "6px",
+                  }}
+                />
+                <Bar 
                     dataKey="quantity" 
-                    fill="hsl(var(--primary))" 
+                  fill="hsl(var(--primary))" 
                     radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+                />
+              </BarChart>
+            </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-center">
                 <p className="text-lg font-medium text-muted-foreground mb-2">
